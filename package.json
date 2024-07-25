@@ -1,0 +1,35 @@
+{
+  "name": "planner",
+  "version": "1.0.0",
+  "description": "An API for a multi functionality TO-DO Application to schedule your work.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dineshlalam15/Planner.git"
+  },
+  "keywords": [
+    "mongo",
+    "app",
+    "router",
+    "route",
+    "get",
+    "post",
+    "patch",
+    "delete"
+  ],
+  "author": "Dinesh Kumar Lalam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dineshlalam15/Planner/issues"
+  },
+  "homepage": "https://github.com/dineshlalam15/Planner#readme",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "nodemon": "^3.1.4"
+  }
+}
