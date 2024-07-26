@@ -10,6 +10,7 @@ const subTaskSchema = new Schema({
         default: 'Pending'
     }
 })
+
 const SubTask = model('SubTask', subTaskSchema)
 
 const taskSchema = new Schema({
