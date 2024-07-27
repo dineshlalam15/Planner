@@ -27,8 +27,7 @@ const userSchema = new Schema({
         trim: true
     },
     phoneNo: {
-        type: Number,
-        unique: true
+        type: Number
     },
     password: {
         type: String,
@@ -43,6 +42,18 @@ const userSchema = new Schema({
         ref: "Task"
     }
 }, {timestamps: true})
+
+userSchema.index({ 
+    phoneNo: 1 
+}, { 
+    unique: true, 
+    partialFilterExpression: { 
+        phoneNo: { 
+            $exists: true, 
+            $ne: null 
+        } 
+    } 
+});
 
 const User = model('User', userSchema)
 

@@ -4,7 +4,8 @@ import router from '../routers/user.router.js';
 const app = express()
 
 app.use(express.json())
-app.use(express.urlencoded({extended: true, limit: '16kb'}));
+app.use(express.urlencoded({extended: true}));
+app.use(express.static("public")) 
 
 app.use('/api/v1/users', router)
 
