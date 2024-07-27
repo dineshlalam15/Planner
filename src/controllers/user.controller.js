@@ -7,7 +7,7 @@ const registerUser = async (req, res) => {
     const {userName, firstName, lastName, email, phoneNo, password} = req.body
     const details = [userName, firstName, lastName, email, phoneNo, password]
     details.forEach(element => {
-        if(element != undefined && isEmpty(element)){
+        if((element != lastName && element != phoneNo) && isEmpty(element)){
             return res.status(400).json(`${element} can't be empty`)
         }
     })

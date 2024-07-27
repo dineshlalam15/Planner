@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-import { hash, compare } from "bcrypt";
 
 const userSchema = new Schema({
     name: {
