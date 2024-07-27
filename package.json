@@ -30,9 +30,11 @@
   },
   "homepage": "https://github.com/dineshlalam15/Planner#readme",
   "dependencies": {
+    "cloudinary": "^2.3.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
     "nodemon": "^3.1.4"
   }
 }

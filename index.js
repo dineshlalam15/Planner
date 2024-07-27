@@ -1,4 +1,4 @@
-import { connectToServer, connectToMongoDB } from "./connection.js";
+import { connectToServer, connectToMongoDB } from "./src/utils/connection.js";
 
 connectToMongoDB().then(() => 
     connectToServer()
