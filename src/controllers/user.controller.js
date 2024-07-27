@@ -1,6 +1,7 @@
 import { isEmpty, validateUsername, validateEmail, validatePassword } from '../utils/validation.js'
 import User from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
+import { hash } from 'bcrypt'
 
 const registerUser = async (req, res) => {
     const {userName, firstName, lastName, email, phoneNo, password} = req.body
@@ -45,6 +46,7 @@ const registerUser = async (req, res) => {
         displayPicture = await uploadOnCloudinary(displayPictureLocalPath)
     }
 
+    const hashedPassword = await hash(password, 10)
     const newUser = await User.create({
         userName: userName,
         name: {
@@ -53,7 +55,7 @@ const registerUser = async (req, res) => {
         },
         email: email,
         phoneNo: phoneNo ? phoneNo : "",
-        password: password,
+        password: hashedPassword,
         displayPicture: displayPicture ? displayPicture : ""
     })
 

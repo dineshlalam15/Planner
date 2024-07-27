@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/dineshlalam15/Planner#readme",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "cloudinary": "^2.3.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { hash, compare } from "bcrypt";
 
 const userSchema = new Schema({
     name: {
@@ -33,8 +34,7 @@ const userSchema = new Schema({
     password: {
         type: String,
         required: true,
-        minLength: 8,
-        maxLength: 32
+        minLength: 8
     },
     displayPicture: {
         type: String,
