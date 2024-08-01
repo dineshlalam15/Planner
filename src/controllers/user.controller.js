@@ -7,18 +7,14 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 async function generateToken (user) {
-    console.log(user);
     const payload = {
         _id: user._id
     }
-    console.log(payload);
     const secretKey = process.env.SECRET_TOKEN
-    console.log(secretKey);
     const options = {
         expiresIn: process.env.SECRET_TOKEN_EXPIRY
     }
     const jwtToken = jwt.sign(payload, secretKey, options)
-    console.log(jwtToken);
     return jwtToken
 }
 
@@ -99,16 +95,30 @@ const loginUser = async (req, res) => {
         return res.status(400).json({error: "Incorrect Password"})
     }
 
-    const token = await generateToken(findUser)
-    findUser.token = token
+    const refreshToken = await generateToken(findUser)
+    findUser.refreshToken = refreshToken
     await findUser.save()
 
-    const loggedInUser = await User.findById(findUser._id).select("-password -token")
-    return res.status(200).json({
+    const loggedInUser = await User.findById(findUser._id).select("-password -refreshToken")
+    return res.status(200)
+    .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 4*3600000)
+    }).json({
         user: loggedInUser,
         Message: 'User Logged-In Successfully',
-        Token: token
+        refreshToken: refreshToken
     })
 }
 
-export {registerUser, loginUser}
+const logoutUser = async(req, res) => {
+    await User.findByIdAndUpdate(req.user._id, {
+        $set: {
+            refreshToken: undefined
+        }
+    }, {new: true})
+    res.clearCookie('refreshToken')
+    return res.status(200).json({Message: "User Logged Out Successfully"})
+}
+
+export {registerUser, loginUser, logoutUser}

@@ -39,7 +39,7 @@ const userSchema = new Schema({
     displayPicture: {
         type: String,
     },
-    token: {
+    refreshToken: {
         type: String
     },
     tasks: {
