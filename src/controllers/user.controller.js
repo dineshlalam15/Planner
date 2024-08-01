@@ -121,32 +121,36 @@ const logoutUser = async(req, res) => {
     return res.status(200).json({Message: "User Logged Out Successfully"})
 }
 
-const changePassword = async(req, res) => {
-    const {oldPassword, newPassword, confirmPassword} = req.body
-    if(!oldPassword){
-        return res.status(400).json({Message: "Please enter oldPassword"})
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+        if (!oldPassword) {
+            return res.status(400).json({ message: "Please enter oldPassword" });
+        }
+        const checkOldPassword = await compare(oldPassword, req.user.password);
+        if (!checkOldPassword) {
+            return res.status(400).json({ message: "oldPassword you entered is incorrect" });
+        }
+
+        if (!newPassword) {
+            return res.status(400).json({ message: "Please enter the newPassword" });
+        }
+        if (isEmpty(newPassword)) {
+            return res.status(400).json({ message: "newPassword can't be empty" });
+        }
+        if (!validatePassword(newPassword)) {
+            return res.status(400).json({ message: "newPassword doesn't satisfy the security requirements" });
+        }
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "newPassword and confirmPassword should be the same" });
+        }
+        const hashedNewPassword = await hash(newPassword, 10);
+        await User.findByIdAndUpdate(req.user._id, {password: hashedNewPassword}, { new: true });
+        return res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "An error occurred while changing the password" });
     }
-    const findUser = await User.findById(req.user._id)
-    const checkOldPassword = await compare(oldPassword, findUser.password)
-    if(!checkOldPassword){
-        return res.status(400).json({Message: "oldPassword you entered is incorrect"})
-    }
-    if(!newPassword){
-        return res.status(400).json({Message: "Please enter the newPassword"})
-    }
-    if(isEmpty(newPassword)){
-        return res.status(400).json({Message: "newPassword can't be empty"})
-    }
-    if(!validatePassword(newPassword)){
-        return res.status(400).json({Message: "newPassword doesn't satisy the security requirements"})
-    }
-    if(newPassword !== confirmPassword){
-        return res.status(400).json({Message: "newPassword and confirmPassword should be same"})
-    }
-    const hashedNewPassword = await hash(newPassword, 10)
-    findUser.password = hashedNewPassword
-    findUser.save()
-    return res.status(200).json({Message: "Password changed successfully"})
-}
+};
 
 export {registerUser, loginUser, logoutUser, changePassword}
