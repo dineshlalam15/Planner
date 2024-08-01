@@ -121,4 +121,32 @@ const logoutUser = async(req, res) => {
     return res.status(200).json({Message: "User Logged Out Successfully"})
 }
 
-export {registerUser, loginUser, logoutUser}
+const changePassword = async(req, res) => {
+    const {oldPassword, newPassword, confirmPassword} = req.body
+    if(!oldPassword){
+        return res.status(400).json({Message: "Please enter oldPassword"})
+    }
+    const findUser = await User.findById(req.user._id)
+    const checkOldPassword = await compare(oldPassword, findUser.password)
+    if(!checkOldPassword){
+        return res.status(400).json({Message: "oldPassword you entered is incorrect"})
+    }
+    if(!newPassword){
+        return res.status(400).json({Message: "Please enter the newPassword"})
+    }
+    if(isEmpty(newPassword)){
+        return res.status(400).json({Message: "newPassword can't be empty"})
+    }
+    if(!validatePassword(newPassword)){
+        return res.status(400).json({Message: "newPassword doesn't satisy the security requirements"})
+    }
+    if(newPassword !== confirmPassword){
+        return res.status(400).json({Message: "newPassword and confirmPassword should be same"})
+    }
+    const hashedNewPassword = await hash(newPassword, 10)
+    findUser.password = hashedNewPassword
+    findUser.save()
+    return res.status(200).json({Message: "Password changed successfully"})
+}
+
+export {registerUser, loginUser, logoutUser, changePassword}
