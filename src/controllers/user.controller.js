@@ -78,6 +78,7 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     const {userName, email, password} = req.body
+    const details = [userName, email, password]
     if(userName != undefined && !userName){
         return res.status(400).json({error: 'Enter a valid userName'})
     }
@@ -153,4 +154,73 @@ const changePassword = async (req, res) => {
     }
 };
 
-export {registerUser, loginUser, logoutUser, changePassword}
+const updateUserDetails = async(req, res) => {
+    const {userName, email, firstName, lastName, phoneNo} = req.body
+    try {
+        if(userName){
+            if(isEmpty(userName)){
+                return res.status(400).json({message: "userName can't be empty"})
+            }
+            const existedUserName = await User.findOne({userName: userName})
+            if(existedUserName){
+                return res.status(400).json({message: "userName not available"})
+            }
+            if(validateUsername(userName)){
+                req.user.userName = userName
+            }
+        }
+        if(email){
+            if(isEmpty(email)){
+                return res.status(400).json({message: "email can't be empty"})
+            }
+            const existedEmail = await User.findOne({email: email})
+            if(existedEmail){
+                return res.status(400).json({message: "User with this email already exists"})
+            }
+            if(validateEmail(email)){
+                res.user.email = email
+            }
+        }
+        if(firstName){
+            if(isEmpty(firstName)){
+                return res.status(400).json({message: "firstName can't be empty"})
+            }
+            req.user.name[firstName] = firstName
+        }
+        if(lastName){
+            req.user.name[lastName] = lastName
+        }
+        if(phoneNo){
+            req.user.phoneNo = phoneNo
+        }
+    
+        let displayPictureLocalPath
+        if (req.files && Array.isArray(req.files.displayPicture) && req.files.displayPicture.length > 0) {
+            displayPictureLocalPath = req.files.displayPicture[0].path
+        }
+        let displayPicture
+        if(displayPictureLocalPath){
+            displayPicture = await uploadOnCloudinary(displayPictureLocalPath)
+        }
+        req.user.displayPicture = displayPicture ? displayPicture.url : req.user.displayPicture
+    
+        const updatedUserDetails = await User.findByIdAndUpdate(req.user._id, {
+            userName: req.user.userName,
+            name: {
+                firstName: req.user.name[firstName],
+                lastName: req.user.name[lastName],
+            },
+            email: req.user.email,
+            phoneNo: req.user.phoneNo,
+            displayPicture: req.user.displayPicture
+        }, {new: true}).select("-password -refreshToken")
+        return res.status(200).json({
+            message: "User details updated successfully",
+            updatedUserDetails: updatedUserDetails
+        })
+    } catch (error) {
+        return res.status(500).json({message: 'Internal Server Error'})
+    }
+}
+
+export {registerUser, loginUser, logoutUser, changePassword, updateUserDetails}
