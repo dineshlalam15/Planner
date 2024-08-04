@@ -1,6 +1,6 @@
 import { isEmpty, validateUsername, validateEmail, validatePassword } from '../utils/validation.js'
 import User from '../models/user.model.js'
-import { uploadOnCloudinary } from '../utils/cloudinary.js'
+import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js'
 import { hash, compare } from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
@@ -223,4 +223,10 @@ const updateUserDetails = async(req, res) => {
     }
 }
 
-export {registerUser, loginUser, logoutUser, changePassword, updateUserDetails}
+const deleteAccount = async(req, res) => {
+    const deletedUserName = req.user.userName
+    await User.findByIdAndDelete(req.user._id)
+    return res.status(200).json({message: "Account succesfully deleted", deletedUser: deletedUserName})
+}
+
+export {registerUser, loginUser, logoutUser, changePassword, updateUserDetails, deleteAccount}
