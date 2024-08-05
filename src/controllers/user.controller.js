@@ -53,7 +53,10 @@ const registerUser = async (req, res) => {
             displayPicture: displayPicture || undefined,
         });
         const createdUser = await User.findById(newUser._id).select("-password -token")
-        return res.status(201).json({Message: 'New User Registered', Details: createdUser})
+        return res.status(201).json({
+            Message: 'New User Registered', 
+            Details: createdUser
+        })
     } catch (error) {
         console.error(error);
         return res.status(400).json({message: error.message})
@@ -168,7 +171,10 @@ const deleteDisplayPicture = async(req, res) => {
 const deleteAccount = async(req, res) => {
     const deletedUserName = req.user.userName
     await User.findByIdAndDelete(req.user._id)
-    return res.status(200).json({message: "Account succesfully deleted", deletedUser: deletedUserName})
+    return res.status(200).json({
+        message: "Account succesfully deleted",
+        deletedUser: deletedUserName
+    })
 }
 
 export {

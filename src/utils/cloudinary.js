@@ -9,11 +9,9 @@ const uploadOnCloudinary = async (localpath) => {
         api_key: process.env.CLOUDINARY_API_KEY, 
         api_secret: process.env.CLOUDINARY_API_SECRET 
     });
-
     if(!localpath){
         return null
     }
-
     try {
         const uploadResult = await cloudinary.uploader.upload(localpath);
         const uploadURL = cloudinary.url(uploadResult.public_id, {
