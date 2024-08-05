@@ -1,7 +1,6 @@
-import { isEmpty, validateUsername, validateEmail, validatePassword } from '../utils/validation.js'
+import { isEmpty, validateEmail, validatePassword } from '../utils/validation.js'
 import User from '../models/user.model.js'
-import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js'
-import { hash, compare } from 'bcrypt'
+import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 dotenv.config()
@@ -19,87 +18,64 @@ async function generateToken (user) {
 }
 
 const registerUser = async (req, res) => {
-    const {userName, firstName, lastName, email, phoneNo, password} = req.body
-    
-    const requiredFields = {userName, firstName, email, password};
-    for(const [key, value] of Object.entries(requiredFields)){
-        if (isEmpty(value)) {
-            return res.status(400).json({ error: `${key} can't be empty` });
+    try {
+        const {firstName, lastName, email, password} = req.body
+        const requiredFields = {firstName, email, password};
+        for(const [key, value] of Object.entries(requiredFields)){
+            if (isEmpty(value)) {
+                return res.status(400).json({ error: `${key} can't be empty` });
+            }
         }
-    }
-    if(!validateUsername(userName)){
-        return res.status(400).json({ error: 'userName not available' });
-    }
-    if(!validateEmail(email)){
-        return res.status(400).json({ error: 'Enter a valid email' });
-    }
-    if(!validatePassword(password)){
-        return res.status(400).json({ error: "Password doesn't meet security requirements" });
-    }
-
-    const existedUserName = await User.findOne({userName: userName})
-    const existedEmail = await User.findOne({email: email})
-    if(existedUserName){
-        return res.status(400).json({error: 'userName not availaible'})
-    }
-    if(existedEmail){
-        return res.status(400).json({error: 'User with this email already exist'})
-    }
-
-    if(phoneNo) {
-        const existedPhoneNo = await User.findOne({phoneNo});
-        if (existedPhoneNo) {
-            return res.status(400).json({error: 'User with this phone number already exists'});
+        if(!validateEmail(email)){
+            return res.status(400).json({ error: 'Enter a valid email' });
         }
+        if(!validatePassword(password)){
+            return res.status(400).json({ error: "Password doesn't meet security requirements" });
+        }
+        const existedUser = await User.findOne({email: email})
+        if(existedUser){
+            return res.status(400).json({error: 'User with this email already exist'})
+        }
+        let displayPicture;
+        if(req.files && Array.isArray(req.files.displayPicture) && req.files.displayPicture.length > 0){
+            const displayPictureLocalPath = req.files.displayPicture[0].path;
+            if(displayPictureLocalPath){
+                displayPicture = await uploadOnCloudinary(displayPictureLocalPath);
+            }   
+        }
+        const newUser = await User.create({
+            name: {
+                firstName: firstName,
+                lastName: lastName || undefined,
+            },
+            email: email,
+            password: password,
+            displayPicture: displayPicture || undefined,
+        });
+        const createdUser = await User.findById(newUser._id).select("-password -token")
+        return res.status(201).json({Message: 'New User Registered', Details: createdUser})
+    } catch (error) {
+        console.error(error);
+        return res.status(400).json({message: error.message})
     }
-
-    let displayPicture;
-    if(req.files && Array.isArray(req.files.displayPicture) && req.files.displayPicture.length > 0){
-        const displayPictureLocalPath = req.files.displayPicture[0].path;
-        displayPicture = await uploadOnCloudinary(displayPictureLocalPath);
-    }
-
-    const hashedPassword = await hash(password, 10)
-    const newUser = await User.create({
-        userName,
-        name: {
-            firstName: firstName,
-            lastName: lastName,
-        },
-        email: email,
-        phoneNo: phoneNo,
-        password: hashedPassword,
-        displayPicture: displayPicture,
-    });
-
-    const createdUser = await User.findById(newUser._id).select("-password -token")
-    return res.status(201).json({Message: 'New User Registered', Details: createdUser})
 }
 
 const loginUser = async (req, res) => {
-    const {userName, email, password} = req.body
-    const details = [userName, email, password]
-    if(userName != undefined && !userName){
-        return res.status(400).json({error: 'Enter a valid userName'})
-    }
+    const {email, password} = req.body
     if(email != undefined && !email){
         return res.status(400).json({error: 'Enter a valid email'})
     }
-
-    const findUser = await User.findOne({ $or: [{userName}, {email}] })
+    const findUser = await User.findOne({email: email})
     if(!findUser){
         return res.status(404).json({error: 'User not found'})
     }
-
-    const checkPassword = await compare(password, findUser.password)
+    const checkPassword = await findUser.checkPassword(password)
     if(!checkPassword){
         return res.status(400).json({error: "Incorrect Password"})
     }
-
     const refreshToken = await generateToken(findUser)
     findUser.refreshToken = refreshToken
-    await findUser.save()
-
+    await findUser.save({validateBeforeSave: false})
     const loggedInUser = await User.findById(findUser._id).select("-password -refreshToken")
     return res.status(200)
     .cookie("refreshToken", refreshToken, {
@@ -114,10 +90,10 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async(req, res) => {
     await User.findByIdAndUpdate(req.user._id, {
-        $set: {
-            refreshToken: undefined
+        $unset: {
+            refreshToken: ""
         }
-    }, {new: true})
+    }, {new: true})  
     res.clearCookie('refreshToken')
     return res.status(200).json({Message: "User Logged Out Successfully"})
 }
@@ -125,16 +101,13 @@ const logoutUser = async(req, res) => {
 const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword, confirmPassword } = req.body;
-        if (!oldPassword) {
+        const findUser = await User.findById(req.user._id)
+        if (isEmpty(oldPassword)){
             return res.status(400).json({ message: "Please enter oldPassword" });
         }
-        const checkOldPassword = await compare(oldPassword, req.user.password);
+        const checkOldPassword = await findUser.checkPassword(oldPassword);
         if (!checkOldPassword) {
             return res.status(400).json({ message: "oldPassword you entered is incorrect" });
-        }
-
-        if (!newPassword) {
-            return res.status(400).json({ message: "Please enter the newPassword" });
         }
         if (isEmpty(newPassword)) {
             return res.status(400).json({ message: "newPassword can't be empty" });
@@ -145,8 +118,7 @@ const changePassword = async (req, res) => {
         if (newPassword !== confirmPassword) {
             return res.status(400).json({ message: "newPassword and confirmPassword should be the same" });
         }
-        const hashedNewPassword = await hash(newPassword, 10);
-        await User.findByIdAndUpdate(req.user._id, {password: hashedNewPassword}, { new: true });
+        await findUser.save()
         return res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
         console.error(error);
@@ -155,72 +127,42 @@ const changePassword = async (req, res) => {
 };
 
 const updateUserDetails = async(req, res) => {
-    const {userName, email, firstName, lastName, phoneNo} = req.body
+    const {firstName, lastName} = req.body
+    const findUser = await User.findById(req.user._id)
     try {
-        if(userName){
-            if(isEmpty(userName)){
-                return res.status(400).json({message: "userName can't be empty"})
-            }
-            const existedUserName = await User.findOne({userName: userName})
-            if(existedUserName){
-                return res.status(400).json({message: "userName not available"})
-            }
-            if(validateUsername(userName)){
-                req.user.userName = userName
-            }
-        }
-        if(email){
-            if(isEmpty(email)){
-                return res.status(400).json({message: "email can't be empty"})
-            }
-            const existedEmail = await User.findOne({email: email})
-            if(existedEmail){
-                return res.status(400).json({message: "User with this email already exists"})
-            }
-            if(validateEmail(email)){
-                res.user.email = email
-            }
-        }
-        if(firstName){
-            if(isEmpty(firstName)){
-                return res.status(400).json({message: "firstName can't be empty"})
-            }
-            req.user.name[firstName] = firstName
-        }
-        if(lastName){
-            req.user.name[lastName] = lastName
-        }
-        if(phoneNo){
-            req.user.phoneNo = phoneNo
-        }
-    
-        let displayPictureLocalPath
-        if (req.files && Array.isArray(req.files.displayPicture) && req.files.displayPicture.length > 0) {
-            displayPictureLocalPath = req.files.displayPicture[0].path
-        }
         let displayPicture
-        if(displayPictureLocalPath){
-            displayPicture = await uploadOnCloudinary(displayPictureLocalPath)
+        if (req.files && Array.isArray(req.files.displayPicture) && req.files.displayPicture.length > 0) {
+            const displayPictureLocalPath = req.files.displayPicture[0].path
+            if(displayPictureLocalPath){
+                displayPicture = await uploadOnCloudinary(displayPictureLocalPath)
+            }
         }
-        req.user.displayPicture = displayPicture ? displayPicture.url : req.user.displayPicture
-    
         const updatedUserDetails = await User.findByIdAndUpdate(req.user._id, {
-            userName: req.user.userName,
             name: {
-                firstName: req.user.name[firstName],
-                lastName: req.user.name[lastName],
+                firstName: firstName ? firstName : findUser.name.firstName,
+                lastName: lastName ? lastName : findUser.name.lastName,
             },
-            email: req.user.email,
-            phoneNo: req.user.phoneNo,
-            displayPicture: req.user.displayPicture
+            displayPicture: displayPicture ? displayPicture : findUser.displayPicture
         }, {new: true}).select("-password -refreshToken")
         return res.status(200).json({
             message: "User details updated successfully",
             updatedUserDetails: updatedUserDetails
         })
     } catch (error) {
+        console.error(error);
         return res.status(500).json({message: 'Internal Server Error'})
     }
+}
+
+const deleteDisplayPicture = async(req, res) => {
+    const findUser = await User.findById(req.user._id)
+    const cloudinaryURL = findUser.displayPicture
+    if(!cloudinaryURL){
+        return res.status(400).json({message: "There is no image uploaded on Cloudinary"})
+    }
+    findUser.displayPicture = undefined
+    findUser.save({validateBeforeSave: false})
+    return res.status(200).json({message: "displayPicture deleted"})
 }
 
 const deleteAccount = async(req, res) => {
@@ -229,4 +171,12 @@ const deleteAccount = async(req, res) => {
     return res.status(200).json({message: "Account succesfully deleted", deletedUser: deletedUserName})
 }
 
-export {registerUser, loginUser, logoutUser, changePassword, updateUserDetails, deleteAccount}
+export {
+    registerUser, 
+    loginUser, 
+    logoutUser, 
+    changePassword, 
+    updateUserDetails, 
+    deleteAccount, 
+    deleteDisplayPicture
+}

@@ -1,7 +1,15 @@
 import { Router } from 'express'
-import {upload} from '../middlewares/multer.middleware.js'
-import { registerUser, loginUser, logoutUser, changePassword, updateUserDetails, deleteAccount } from '../controllers/user.controller.js'
+import { upload } from '../middlewares/multer.middleware.js'
 import { verifyToken } from '../middlewares/auth.middleware.js'
+import { 
+    registerUser, 
+    loginUser, 
+    logoutUser, 
+    changePassword, 
+    updateUserDetails, 
+    deleteAccount, 
+    deleteDisplayPicture 
+} from '../controllers/user.controller.js'
 
 const router = Router()
 router.route('/register').post(upload.fields([
@@ -21,5 +29,6 @@ router.route('/updatedetails').patch(verifyToken, upload.fields([
     }
 ]), updateUserDetails)
 router.route('/deleteuser').delete(verifyToken, deleteAccount)
+router.route('/deletedp').delete(verifyToken, deleteDisplayPicture)
 
 export default router
