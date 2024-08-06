@@ -29,10 +29,16 @@ const userSchema = new Schema({
     refreshToken: {
         type: String
     },
-    tasks: {
+    createdTasks: [{
         type: Schema.Types.ObjectId,
-        ref: "Task"
-    }
+        ref: "Task",
+        default: []
+    }],
+    assignedTasks: [{
+        type: Schema.Types.ObjectId,
+        ref: "Task",
+        default: []
+    }]    
 }, {timestamps: true})
 
 userSchema.pre("save", async function (next) {

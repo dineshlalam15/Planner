@@ -1,8 +1,8 @@
 import { Schema, model } from "mongoose";
 
 const subTaskSchema = new Schema({
-    deadline: {
-        type: Date
+    title: {
+        type: String
     },
     status: {
         type: String,
@@ -11,9 +11,11 @@ const subTaskSchema = new Schema({
     }
 })
 
-const SubTask = model('SubTask', subTaskSchema)
-
 const taskSchema = new Schema({
+    title: {
+        type: String,
+        required: true
+    },
     created: {
         type: Date,
         default: Date.now,
@@ -25,26 +27,39 @@ const taskSchema = new Schema({
     deadline: {
         type: Date
     },
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    },
     priority: {
         type: String,
-        enum: ['Low', 'Medium', 'High'],
-        default: 'Low'
+        enum: ['low', 'medium', 'high'],
+        default: 'low',
+        lowercase: true
     },
-    subTasks: [{
-        type: Schema.Types.ObjectId,
-        ref: "SubTask"
-    }],
     status: {
         type: String,
-        enum: ['Pending', 'In Progress', 'Completed'],
-        default: 'Pending'
-    }
+        enum: ['pending', 'in progress', 'completed'],
+        default: 'pending',
+        lowercase: true
+    },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+    },
+    assignedTo: [{
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+    }],
+    subTasks: [{
+        type: subTaskSchema,
+        default: []
+    }]    
 }, {timestamps: true})
+
+function stringToDate(dateString){
+    const dateParts = dateString.split('-')
+    const formattedDate = [dateParts[2], dateParts[1], dateParts[0]].join('-')
+    return new Date(formattedDate)
+}
 
 const Task = model('Task', taskSchema)
 
-export default Task
+export {Task, stringToDate}

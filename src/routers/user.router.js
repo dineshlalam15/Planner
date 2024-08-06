@@ -11,24 +11,24 @@ import {
     deleteDisplayPicture 
 } from '../controllers/user.controller.js'
 
-const router = Router()
+const userRouter = Router()
 
-router.route('/register').post(upload.fields([
+userRouter.route('/register').post(upload.fields([
     {
         name: "displayPicture",
         maxCount: 1
     }
 ]), registerUser)
-router.route('/login').post(loginUser)
-router.route('/logout').get(verifyToken, logoutUser)
-router.route('/changepassword').patch(verifyToken, changePassword)
-router.route('/updatedetails').patch(verifyToken, upload.fields([
+userRouter.route('/login').post(loginUser)
+userRouter.route('/logout').get(verifyToken, logoutUser)
+userRouter.route('/changepassword').patch(verifyToken, changePassword)
+userRouter.route('/updatedetails').patch(verifyToken, upload.fields([
     {
         name: "displayPicture",
         maxCount: 1
     }
 ]), updateUserDetails)
-router.route('/deleteuser').delete(verifyToken, deleteAccount)
-router.route('/deletedp').delete(verifyToken, deleteDisplayPicture)
+userRouter.route('/deleteuser').delete(verifyToken, deleteAccount)
+userRouter.route('/deletedp').delete(verifyToken, deleteDisplayPicture)
 
-export default router
+export default userRouter
