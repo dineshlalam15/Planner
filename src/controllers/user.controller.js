@@ -91,6 +91,10 @@ const loginUser = async (req, res) => {
     })
 }
 
+const getUser = async(req, res) => {
+    return await User.findById(req.user._id).select("-password -refreshToken")
+}
+
 const logoutUser = async(req, res) => {
     await User.findByIdAndUpdate(req.user._id, {
         $unset: {
@@ -180,6 +184,7 @@ const deleteAccount = async(req, res) => {
 export {
     registerUser, 
     loginUser, 
+    getUser,
     logoutUser, 
     changePassword, 
     updateUserDetails, 

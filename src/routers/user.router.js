@@ -4,6 +4,7 @@ import { verifyToken } from '../middlewares/auth.middleware.js'
 import { 
     registerUser, 
     loginUser, 
+    getUser,
     logoutUser, 
     changePassword, 
     updateUserDetails, 
@@ -20,6 +21,7 @@ userRouter.route('/register').post(upload.fields([
     }
 ]), registerUser)
 userRouter.route('/login').post(loginUser)
+userRouter.route('/user').get(verifyToken, getUser)
 userRouter.route('/logout').get(verifyToken, logoutUser)
 userRouter.route('/changepassword').patch(verifyToken, changePassword)
 userRouter.route('/updatedetails').patch(verifyToken, upload.fields([

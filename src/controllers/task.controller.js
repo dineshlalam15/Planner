@@ -40,4 +40,28 @@ const createTask = async(req, res) => {
     }
 }
 
-export { createTask }
+const getTask = async(req, res) => {
+    try {
+        const {id} = req.params
+        const findTask = await Task.findById(id).populate({
+            path: "assignedTo",
+            select: "name.firstName email"
+        })
+        return res.status(200).json({
+            message: "Task Details Fetched Successfully",
+            Task: findTask
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal Server Error"})
+    }
+}
+
+const updateTask = async(req, res) => {
+    
+}
+
+export { 
+    createTask ,
+    getTask
+}
