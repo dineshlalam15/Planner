@@ -13,9 +13,7 @@ passport.use(
     },
     async function(request, accessToken, refreshToken, profile, done) {
         try {
-            let findUser = await User.findOne({ email: profile.emails[0].value });
-            console.log(findUser);
-            
+            let findUser = await User.findOne({ email: profile.emails[0].value });    
             if (!findUser) {
                 findUser = await User.create({
                     name: {
@@ -31,9 +29,7 @@ passport.use(
             } else {
                 findUser.refreshToken = refreshToken;
                 findUser.accessToken = accessToken;
-                await findUser.save({ validateBeforeSave: false });
-                console.log(findUser);
-                
+                await findUser.save({ validateBeforeSave: false });              
             }
             return done(null, findUser);
         } catch (error) {
