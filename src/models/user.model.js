@@ -20,13 +20,21 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
-        minLength: 8
+        minLength: 8,
+        validate: {
+            validator: function(value) {
+                return this.isOAuthUser || (value && value.length >= 8);
+            },
+            message: 'Password should be at least 8 characters long'
+        }
     },
     displayPicture: {
         type: String,
     },
     refreshToken: {
+        type: String
+    },
+    accessToken: {
         type: String
     },
     createdTasks: [{
@@ -38,7 +46,11 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Task",
         default: []
-    }]    
+    }],
+    isOAuthUser: {
+        type: Boolean,
+        default: false
+    }
 }, {timestamps: true})
 
 userSchema.pre("save", async function (next) {

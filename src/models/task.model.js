@@ -6,8 +6,8 @@ const subTaskSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'In Progress', 'Finished'],
-        default: 'Pending'
+        enum: ['pending', 'in progress', 'finished'],
+        default: 'pending'
     }
 })
 

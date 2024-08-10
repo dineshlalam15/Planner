@@ -6,6 +6,7 @@ import {
     loginUser, 
     getUser,
     logoutUser, 
+    refreshAccessToken,
     changePassword, 
     updateUserDetails, 
     deleteAccount, 
@@ -14,22 +15,18 @@ import {
 
 const userRouter = Router()
 
-userRouter.route('/register').post(upload.fields([
-    {
-        name: "displayPicture",
-        maxCount: 1
-    }
-]), registerUser)
+const uploadImageOptions = {
+    name: "displayPicture",
+    maxCount: 1
+}
+
+userRouter.route('/register').post(upload.fields([uploadImageOptions]), registerUser)
 userRouter.route('/login').post(loginUser)
 userRouter.route('/user').get(verifyToken, getUser)
 userRouter.route('/logout').get(verifyToken, logoutUser)
+userRouter.route('/refresh-accesstoken').get(refreshAccessToken)
 userRouter.route('/changepassword').patch(verifyToken, changePassword)
-userRouter.route('/updatedetails').patch(verifyToken, upload.fields([
-    {
-        name: "displayPicture",
-        maxCount: 1
-    }
-]), updateUserDetails)
+userRouter.route('/updatedetails').patch(verifyToken, upload.fields([uploadImageOptions]), updateUserDetails)
 userRouter.route('/deleteuser').delete(verifyToken, deleteAccount)
 userRouter.route('/deletedp').delete(verifyToken, deleteDisplayPicture)
 
