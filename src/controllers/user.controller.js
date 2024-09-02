@@ -37,7 +37,7 @@ const refreshAccessToken = async (req, res) => {
         const accessTokenOptions = {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
-        const accessToken = jwt.sign({ payload, secretKey, accessTokenOptions })
+        const accessToken = jwt.sign(payload, secretKey, accessTokenOptions)
         await User.findByIdAndupdate(user._id, 
             { 
                 accessToken: accessToken 
@@ -57,7 +57,7 @@ const registerUser = async (req, res) => {
         const requiredFields = {firstName, email, password};
         for(const [key, value] of Object.entries(requiredFields)){
             if (isEmpty(value)) {
-                return res.status(400).json({ error: `${key} can't be empty` });
+                return res.status(400).json({ error: `Key ${key}: ${value} can't be empty` });
             }
         }
         if(!validateEmail(email)){

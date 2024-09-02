@@ -7,13 +7,13 @@ const verifyToken = async (req, res, next) => {
     try{
         const accessToken = req.cookies.accessToken        
         if(!accessToken){
-            const token = req.cookies.refreshToken
-            if (!token) {
+            const refreshToken = req.cookies.refreshToken
+            if (!refreshToken) {
                 return res.status(401).json({message: 'No token provided'});
             }
-            const decodedInfo = jwt.verify(token, process.env.SECRET_TOKEN)
+            const decodedInfo = jwt.verify(refreshToken, process.env.SECRET_TOKEN)
             const findUser = await User.findById(decodedInfo._id)
-            if (!findUser || findUser.refreshToken !== refreshToken) {
+            if (!findUser || findUser.refreshToken !== token) {
                 return res.status(403).json({ message: 'Invalid refreshToken' });
             }
             const payload = {
@@ -23,10 +23,10 @@ const verifyToken = async (req, res, next) => {
             const accessTokenOptions = {
                 expiresIn: process.env.ACCESS_TOKEN_EXPIRY
             }
-            const generateAccesToken = jwt.sign(payload, secretKey, accessTokenOptions);
-            findUser.accessToken = generateAccesToken
+            const generateAccessToken = jwt.sign(payload, secretKey, accessTokenOptions);
+            findUser.accessToken = generateAccessToken
             await findUser.save({validateBeforeSave: false})
-            res.setHeader('Authorization', `Bearer ${generateAccesToken}`);
+            res.setHeader('Authorization', `Bearer ${generateAccessToken}`);
             req.user = findUser
             return next()
         } 
