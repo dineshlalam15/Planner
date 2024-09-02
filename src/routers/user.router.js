@@ -23,7 +23,7 @@ const uploadImageOptions = {
 userRouter.route('/register').post(upload.fields([uploadImageOptions]), registerUser)
 userRouter.route('/login').post(loginUser)
 userRouter.route('/user').get(verifyToken, getUser)
-userRouter.route('/logout').delete(verifyToken, logoutUser)
+userRouter.route('/logout').get(verifyToken, logoutUser)
 userRouter.route('/refresh-accesstoken').get(refreshAccessToken)
 userRouter.route('/changepassword').patch(verifyToken, changePassword)
 userRouter.route('/updatedetails').patch(verifyToken, upload.fields([uploadImageOptions]), updateUserDetails)
